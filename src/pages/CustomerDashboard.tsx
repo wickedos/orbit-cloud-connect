@@ -17,13 +17,29 @@ import {
   Plus,
   Activity,
   CreditCard,
-  HelpCircle
+  HelpCircle,
+  Download,
+  ExternalLink
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import ServiceApplicationModal from "@/components/ServiceApplicationModal";
+import SupportTicketModal from "@/components/SupportTicketModal";
+import LiveChatModal from "@/components/LiveChatModal";
+import ServiceDetailsModal from "@/components/ServiceDetailsModal";
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
+  const [serviceApplicationModal, setServiceApplicationModal] = useState<{
+    isOpen: boolean;
+    serviceType: "SaaS" | "IaaS" | "PaaS" | null;
+  }>({ isOpen: false, serviceType: null });
+  const [supportTicketModal, setSupportTicketModal] = useState(false);
+  const [liveChatModal, setLiveChatModal] = useState(false);
+  const [serviceDetailsModal, setServiceDetailsModal] = useState<{
+    isOpen: boolean;
+    service: any;
+  }>({ isOpen: false, service: null });
 
   useEffect(() => {
     const userType = localStorage.getItem("userType");
@@ -71,15 +87,23 @@ const CustomerDashboard = () => {
   ];
 
   const supportTickets = [
-    { id: 1, subject: "Storage expansion request", status: "Open", priority: "Medium" },
-    { id: 2, subject: "API rate limit increase", status: "In Progress", priority: "High" },
-    { id: 3, subject: "Billing inquiry", status: "Resolved", priority: "Low" }
+    { id: 1, subject: "Storage expansion request", status: "Open", priority: "Medium", created: "2 days ago" },
+    { id: 2, subject: "API rate limit increase", status: "In Progress", priority: "High", created: "1 day ago" },
+    { id: 3, subject: "Billing inquiry", status: "Resolved", priority: "Low", created: "3 days ago" }
   ];
 
   const handleLogout = () => {
     localStorage.removeItem("userType");
     localStorage.removeItem("userEmail");
     navigate("/");
+  };
+
+  const openServiceApplication = (serviceType: "SaaS" | "IaaS" | "PaaS") => {
+    setServiceApplicationModal({ isOpen: true, serviceType });
+  };
+
+  const openServiceDetails = (service: any) => {
+    setServiceDetailsModal({ isOpen: true, service });
   };
 
   return (
@@ -153,7 +177,7 @@ const CustomerDashboard = () => {
           <TabsContent value="services" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Active Services</h2>
-              <Button>
+              <Button onClick={() => openServiceApplication("SaaS")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Request New Service
               </Button>
@@ -161,7 +185,8 @@ const CustomerDashboard = () => {
             
             <div className="grid gap-4">
               {services.map((service) => (
-                <Card key={service.id} className="hover:shadow-md transition-shadow">
+                <Card key={service.id} className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => openServiceDetails(service)}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
@@ -181,6 +206,10 @@ const CustomerDashboard = () => {
                         <p className="text-sm text-gray-600 mb-1">Usage</p>
                         <p className="font-semibold">{service.usage}%</p>
                         <Progress value={service.usage} className="w-24 mt-1" />
+                        <Button variant="ghost" size="sm" className="mt-2">
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -192,7 +221,8 @@ const CustomerDashboard = () => {
           <TabsContent value="apply" className="space-y-4">
             <h2 className="text-xl font-semibold">Apply for New Services</h2>
             <div className="grid md:grid-cols-3 gap-6">
-              <Card className="group hover:shadow-lg transition-all cursor-pointer">
+              <Card className="group hover:shadow-lg transition-all cursor-pointer"
+                    onClick={() => openServiceApplication("SaaS")}>
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4 p-3 bg-green-100 rounded-full w-fit group-hover:scale-110 transition-transform">
                     <Cloud className="h-8 w-8 text-green-600" />
@@ -207,7 +237,8 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="group hover:shadow-lg transition-all cursor-pointer">
+              <Card className="group hover:shadow-lg transition-all cursor-pointer"
+                    onClick={() => openServiceApplication("IaaS")}>
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4 p-3 bg-blue-100 rounded-full w-fit group-hover:scale-110 transition-transform">
                     <Users className="h-8 w-8 text-blue-600" />
@@ -222,7 +253,8 @@ const CustomerDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="group hover:shadow-lg transition-all cursor-pointer">
+              <Card className="group hover:shadow-lg transition-all cursor-pointer"
+                    onClick={() => openServiceApplication("PaaS")}>
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4 p-3 bg-purple-100 rounded-full w-fit group-hover:scale-110 transition-transform">
                     <Shield className="h-8 w-8 text-purple-600" />
@@ -242,7 +274,7 @@ const CustomerDashboard = () => {
           <TabsContent value="support" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Support Center</h2>
-              <Button>
+              <Button onClick={() => setSupportTicketModal(true)}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 New Support Ticket
               </Button>
@@ -256,18 +288,19 @@ const CustomerDashboard = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {supportTickets.map((ticket) => (
-                      <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                         <div>
                           <p className="font-medium text-sm">{ticket.subject}</p>
-                          <p className="text-xs text-gray-600">#{ticket.id}</p>
+                          <p className="text-xs text-gray-600">#{ticket.id} • {ticket.created}</p>
                         </div>
                         <div className="text-right">
                           <Badge 
                             variant={ticket.status === "Resolved" ? "default" : "secondary"}
-                            className="text-xs"
+                            className="text-xs mb-1"
                           >
                             {ticket.status}
                           </Badge>
+                          <p className="text-xs text-gray-500">{ticket.priority}</p>
                         </div>
                       </div>
                     ))}
@@ -280,7 +313,8 @@ const CustomerDashboard = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start"
+                          onClick={() => setLiveChatModal(true)}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Start Live Chat
                   </Button>
@@ -291,6 +325,10 @@ const CustomerDashboard = () => {
                   <Button variant="outline" className="w-full justify-start">
                     <Settings className="h-4 w-4 mr-2" />
                     Service Configuration
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Reports
                   </Button>
                 </CardContent>
               </Card>
@@ -321,6 +359,10 @@ const CustomerDashboard = () => {
                       <span>$360.00</span>
                     </div>
                   </div>
+                  <Button variant="outline" className="w-full mt-4">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Invoice
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -350,12 +392,39 @@ const CustomerDashboard = () => {
                     </div>
                     <Progress value={89} />
                   </div>
+                  <Button variant="outline" className="w-full mt-4">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    View Detailed Analytics
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modals */}
+      <ServiceApplicationModal
+        isOpen={serviceApplicationModal.isOpen}
+        onClose={() => setServiceApplicationModal({ isOpen: false, serviceType: null })}
+        serviceType={serviceApplicationModal.serviceType}
+      />
+
+      <SupportTicketModal
+        isOpen={supportTicketModal}
+        onClose={() => setSupportTicketModal(false)}
+      />
+
+      <LiveChatModal
+        isOpen={liveChatModal}
+        onClose={() => setLiveChatModal(false)}
+      />
+
+      <ServiceDetailsModal
+        isOpen={serviceDetailsModal.isOpen}
+        onClose={() => setServiceDetailsModal({ isOpen: false, service: null })}
+        service={serviceDetailsModal.service}
+      />
     </DashboardLayout>
   );
 };
