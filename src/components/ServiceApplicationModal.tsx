@@ -218,7 +218,7 @@ const ServiceApplicationModal = ({ isOpen, onClose, serviceType }: ServiceApplic
                   <SelectItem value="3-6-months">3-6 months</SelectItem>
                   <SelectItem value="6-months+">6+ months</SelectItem>
                 </SelectContent>
-              </SelectContent>
+              </Select>
             </div>
 
             <div>
